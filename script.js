@@ -155,31 +155,11 @@ document.getElementById('enter-btn').addEventListener('click', () => {
 // 2. Live Time Counter (Disabled as per user request to show static stats)
 // function updateCounter() { ... }
 
-// 3. Photo Gallery — password-protected admin upload + IndexedDB persistence
+// 3. Photo Gallery
 const lightbox = document.getElementById('lightbox');
 const lbImg = document.getElementById('lightbox-img');
 const closeLb = document.querySelector('.close-modal');
-const memoryUpload = document.getElementById('memory-upload');
 const galleryGrid = document.getElementById('memory-gallery-grid');
-const noPhotosMsg = document.getElementById('no-photos-msg');
-const adminPanel = document.getElementById('admin-panel');
-const adminUnlockBtn = document.getElementById('admin-unlock-btn');
-const clearMemoriesBtn = document.getElementById('clear-memories-btn');
-
-// ── Secret password unlock ──────────────────────────────────────────────────
-// Change "akka2024" below to whatever password you want
-const ADMIN_PASSWORD = "akka2024";
-
-adminUnlockBtn.addEventListener('click', () => {
-    const pwd = prompt("Enter admin password:");
-    if (pwd === ADMIN_PASSWORD) {
-        adminPanel.style.display = 'block';
-        adminUnlockBtn.textContent = '🔓';
-        adminUnlockBtn.style.opacity = '0.5';
-    } else if (pwd !== null) {
-        alert("Wrong password.");
-    }
-});
 
 // ── Lightbox ────────────────────────────────────────────────────────────────
 function openLightbox(src) {
@@ -195,147 +175,31 @@ closeLb.addEventListener('click', () => {
     }});
 });
 
-// ── Add photo to grid ───────────────────────────────────────────────────────
-function addPhotoToGrid(imgDataUrl) {
-    if (noPhotosMsg) noPhotosMsg.style.display = 'none';
+// ── Load photos from photos.js ───────────────────────────────────────────────
+(function loadGallery() {
+    const photos = (typeof PERMANENT_PHOTOS !== 'undefined') ? PERMANENT_PHOTOS : [];
 
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'gallery-item interactive';
-    itemDiv.setAttribute('data-src', imgDataUrl);
-
-    const imgWrapper = document.createElement('div');
-    imgWrapper.className = 'img-wrapper';
-
-    const imgEl = document.createElement('img');
-    imgEl.src = imgDataUrl;
-    imgEl.alt = 'Memory';
-
-    imgWrapper.appendChild(imgEl);
-    itemDiv.appendChild(imgWrapper);
-
-    itemDiv.addEventListener('click', () => openLightbox(imgDataUrl));
-
-    galleryGrid.appendChild(itemDiv);
-    gsap.fromTo(itemDiv, {opacity: 0, y: 20}, {opacity: 1, y: 0, duration: 0.5, ease: "power2.out"});
-}
-
-// ── IndexedDB ───────────────────────────────────────────────────────────────
-const DB_NAME = 'birthdayMemories';
-const DB_STORE = 'photos';
-let db = null;
-
-function openDB() {
-    return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
-            const database = e.target.result;
-            if (!database.objectStoreNames.contains(DB_STORE)) {
-                database.createObjectStore(DB_STORE, { keyPath: 'id', autoIncrement: true });
-            }
-        };
-        req.onsuccess = (e) => { db = e.target.result; resolve(db); };
-        req.onerror = (e) => reject(e);
-    });
-}
-
-function savePhotoDB(dataUrl) {
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(DB_STORE, 'readwrite');
-        const store = tx.objectStore(DB_STORE);
-        const req = store.add({ data: dataUrl });
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = (e) => reject(e);
-    });
-}
-
-function getAllPhotosDB() {
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(DB_STORE, 'readonly');
-        const store = tx.objectStore(DB_STORE);
-        const req = store.getAll();
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = (e) => reject(e);
-    });
-}
-
-function clearAllPhotosDB() {
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(DB_STORE, 'readwrite');
-        const store = tx.objectStore(DB_STORE);
-        const req = store.clear();
-        req.onsuccess = () => resolve();
-        req.onerror = (e) => reject(e);
-    });
-}
-
-// ── Image compression ───────────────────────────────────────────────────────
-function compressImage(dataUrl) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            const maxRes = 1000;
-            if (width > height) {
-                if (width > maxRes) { height = Math.round(height * maxRes / width); width = maxRes; }
-            } else {
-                if (height > maxRes) { width = Math.round(width * maxRes / height); height = maxRes; }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.75));
-        };
-        img.onerror = () => resolve(dataUrl); // fallback: use original
-        img.src = dataUrl;
-    });
-}
-
-// ── Init: load saved photos, then wire up admin buttons ─────────────────────
-openDB().then(() => getAllPhotosDB()).then((photos) => {
-    if (photos.length === 0 && noPhotosMsg) noPhotosMsg.style.display = 'block';
-    photos.forEach(photo => addPhotoToGrid(photo.data));
-
-    // Clear all (admin only)
-    if (clearMemoriesBtn) {
-        clearMemoriesBtn.addEventListener('click', () => {
-            if (confirm("Remove all saved photos?")) {
-                clearAllPhotosDB().then(() => {
-                    galleryGrid.querySelectorAll('.gallery-item').forEach(item => item.remove());
-                    if (noPhotosMsg) noPhotosMsg.style.display = 'block';
-                    if (memoryUpload) memoryUpload.value = '';
-                }).catch(e => console.warn("Failed to clear memories", e));
-            }
-        });
+    if (photos.length === 0) {
+        galleryGrid.innerHTML = '<p style="text-align:center;color:#aaa;grid-column:1/-1;">No photos yet.</p>';
+        return;
     }
 
-    // Upload (admin only)
-    if (memoryUpload) {
-        memoryUpload.addEventListener('change', async (e) => {
-            const files = Array.from(e.target.files);
-            for (const file of files) {
-                try {
-                    const dataUrl = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => resolve(ev.target.result);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    });
-                    const compressed = await compressImage(dataUrl);
-                    addPhotoToGrid(compressed);
-                    await savePhotoDB(compressed);
-                } catch (err) {
-                    console.error("Failed to save photo:", err);
-                    alert("Could not save one photo. Try a smaller image.");
-                }
-            }
-            memoryUpload.value = '';
-        });
-    }
+    photos.forEach((src, i) => {
+        const item = document.createElement('div');
+        item.className = 'gallery-item interactive';
 
-}).catch(e => console.warn("Failed to load memories from IndexedDB", e));
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Memory ' + (i + 1);
+        img.loading = 'lazy';
+
+        item.appendChild(img);
+        item.addEventListener('click', () => openLightbox(src));
+        galleryGrid.appendChild(item);
+
+        gsap.fromTo(item, {opacity: 0, y: 20}, {opacity: 1, y: 0, duration: 0.5, delay: i * 0.05, ease: "power2.out"});
+    });
+})();
 
 // 7. Cake Section
 const cakeBody = document.querySelector('.cake-body');

@@ -63,19 +63,8 @@
         <section id="gallery-section" class="section glass-section">
             <h2 class="section-title">Our Memories</h2>
 
-            <!-- Admin upload panel — hidden by default, unlocked by secret password -->
-            <div id="admin-panel" style="display:none; text-align:center; margin-bottom:1.5rem;">
-                <input type="file" id="memory-upload" accept="image/*" multiple style="display:none;">
-                <label for="memory-upload" class="glass-btn hover-glow" style="cursor:pointer; display:inline-block;">📸 Add Photos</label>
-                <button id="clear-memories-btn" class="glass-btn" style="cursor:pointer; display:inline-block; margin-left:10px; background:rgba(233,69,96,0.2); padding:0.8rem 1.5rem;">🗑️ Clear All</button>
-                <button id="save-to-site-btn" class="glass-btn" style="cursor:pointer; display:inline-block; margin-left:10px; background:rgba(69,233,130,0.2); padding:0.8rem 1.5rem;">💾 Save to Site</button>
-            </div>
-
-            <!-- Secret unlock button -->
-            <span id="admin-unlock-btn" title="Admin" style="position:absolute; top:20px; right:20px; font-size:1.5rem; opacity:0.6; cursor:pointer; user-select:none; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:42px; height:42px; display:flex; align-items:center; justify-content:center;">🔒</span>
-
             <div class="gallery-grid" id="memory-gallery-grid">
-                <p id="no-photos-msg" style="text-align:center; color:#aaa; grid-column:1/-1; display:none;">No photos yet.</p>
+                <!-- Photos loaded from photos.js -->
             </div>
         </section>
 

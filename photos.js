@@ -1,8 +1,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// PERMANENT PHOTOS — these show for everyone on every device
-// To update: use the admin panel on localhost, click "💾 Save to Site",
-// then replace this file with the downloaded one and redeploy.
+// PERMANENT PHOTOS — these show for everyone on every device after deployment
 // ─────────────────────────────────────────────────────────────────────────────
 const PERMANENT_PHOTOS = [
-    // Base64 photo strings will be added here by the admin tool
+    "./images/photo1.jpeg",
+    "./images/photo2.jpeg",
+    "./images/photo3.jpeg",
+    "./images/photo4.jpeg",
+    "./images/photo5.jpeg",
+    "./images/photo6.jpeg",
+    "./images/photo7.jpeg",
+    "./images/photo8.jpeg",
+    "./images/photo9.jpeg",
+    "./images/photo10.jpeg",
+    "./images/photo11.jpeg",
+    "./images/photo12.jpeg",
+    "./images/photo13.jpeg",
+    "./images/photo14.jpeg",
+    "./images/photo15.jpeg",
+    "./images/photo16.jpeg",
+    "./images/photo17.jpeg"
 ];
